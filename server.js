@@ -11,7 +11,7 @@ import workorder from "./api/workorder.js";
 
 const root = fileURLToPath(new URL("./public/", import.meta.url));
 const routes = { "/api/inspection": inspection, "/api/value": value, "/api/workorder": workorder };
-const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png" };
+const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".woff": "font/woff", ".woff2": "font/woff2" };
 
 // Add status/json/send to the response, like Vercel serverless functions
 function wrap(res) {
