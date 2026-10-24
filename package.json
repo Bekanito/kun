@@ -1,0 +1,9 @@
+{
+  "name": "kun",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kün — ИИ-инспектор солнечных станций: находит дефекты панелей с дрона и считает потери в тенге",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

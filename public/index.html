@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kün — ИИ-инспектор солнечных станций</title>
+<meta name="description" content="Kün находит сломанные и запылённые панели на солнечных станциях Казахстана с дрона-тепловизора и считает потери в тенге.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #efe9dc;
+    --paper: #fbf9f4;
+    --ink: #13202b;
+    --muted: #5d6873;
+    --line: #ddd5c3;
+    --panel: #23466a;
+    --panel-2: #2c5a85;
+    --sun: #f2b33d;
+    --alarm: #d2452f;
+    --warn: #e08a2c;
+    --ok: #3f8f6b;
+    --dust: #a98552;
+    --grass: #6f9a3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--ground); color: var(--ink); font: 15px/1.45 "Onest", system-ui, sans-serif; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 18px 16px 40px; }
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand h1 { font: 700 26px/1 "Unbounded", sans-serif; margin: 0; letter-spacing: -0.02em; }
+  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .seg button { border: 0; background: transparent; font: 600 13px "Onest", sans-serif; padding: 8px 14px; border-radius: 999px; cursor: pointer; color: var(--ink); }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .btn { border: 1px solid var(--ink); background: var(--ink); color: #fff; font: 600 13px "Onest", sans-serif; padding: 10px 16px; border-radius: 999px; cursor: pointer; text-decoration: none; }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .status { margin: 18px 0 14px; display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 12px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .headline h2 { margin: 0; font: 700 21px/1.25 "Unbounded", sans-serif; letter-spacing: -0.01em; }
+  .headline p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+  .kpi .v { font: 700 24px/1.1 "Unbounded", sans-serif; }
+  .kpi .l { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .kpi.money .v { color: var(--alarm); }
+  .kpi.good .v { color: var(--ok); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr); gap: 12px; align-items: start; }
+  .leftcol { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .map-card { position: relative; overflow: hidden; padding: 10px; }
+  .map-head { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px 8px; gap: 8px; flex-wrap: wrap; }
+  .map-head b { font-weight: 700; }
+  .map-head span { color: var(--muted); font-size: 12.5px; }
+  svg#map text { font-family: "Onest", system-ui, sans-serif; }
+  svg#map { width: 100%; height: auto; display: block; border-radius: 10px; background: #e7dfcc; }
+  .scan { position: absolute; top: 46px; bottom: 44px; width: 90px; left: -120px; pointer-events: none;
+          background: linear-gradient(90deg, rgba(242,179,61,0), rgba(242,179,61,.35), rgba(242,179,61,0)); }
+  .scan.run { animation: sweep 1.6s ease-in-out 1; }
+  @keyframes sweep { from { left: -120px; } to { left: calc(100% + 30px); } }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 8px 6px 2px; font-size: 12.5px; color: var(--muted); }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .side { display: flex; flex-direction: column; gap: 12px; }
+  .detail h3, .list h3, .calc h3, .types h3 { margin: 0 0 8px; font: 700 15px "Onest", sans-serif; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: #fde4dc; color: var(--alarm); }
+  .tag.small { background: #fbeccc; color: #94600f; }
+  .detail .big { font: 700 28px/1.1 "Unbounded", sans-serif; color: var(--alarm); margin: 8px 0 2px; }
+  .detail .sub { color: var(--muted); font-size: 13px; }
+  .detail dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 10px 0; font-size: 13.5px; }
+  .detail dt { color: var(--muted); }
+  .detail dd { margin: 0; font-weight: 600; }
+  .thermal { display: flex; gap: 10px; align-items: stretch; margin-top: 8px; }
+  canvas#thermo { width: 100%; height: 110px; border-radius: 8px; background: #111; display: block; }
+  .scale { width: 14px; border-radius: 4px; background: linear-gradient(0deg, #0b0221, #4b0f6e, #b0234e, #ef6a1e, #fbd34a, #fffbe6); }
+  .thermal-cap { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .list ol { list-style: none; margin: 0; padding: 0; }
+  .list li { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; padding: 7px 4px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 6px; }
+  .list li:hover, .list li.sel { background: #f3eee2; }
+  .list .n { font: 700 12px "Unbounded", sans-serif; color: var(--muted); }
+  .list .t { font-size: 13.5px; font-weight: 600; }
+  .list .p { font-size: 12px; color: var(--muted); }
+  .list .m { text-align: right; font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+  .bar { height: 4px; background: #eadfca; border-radius: 3px; margin-top: 4px; }
+  .bar > span { display: block; height: 100%; border-radius: 3px; background: var(--alarm); }
+  .more { font-size: 12.5px; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
+  .lower { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .types .row { display: grid; grid-template-columns: 150px 1fr 100px; gap: 10px; align-items: center; font-size: 13.5px; padding: 5px 0; }
+  .types .track { height: 10px; background: #eadfca; border-radius: 5px; overflow: hidden; }
+  .types .track span { display: block; height: 100%; background: var(--panel-2); border-radius: 5px; }
+  .types .row b { text-align: right; }
+  .calc form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  .calc label { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
+  .calc input { font: 600 16px "Onest", sans-serif; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
+  .calc .out { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+  .calc .out div { background: #f3eee2; border-radius: 10px; padding: 9px 11px; }
+  .calc .out b { display: block; font: 700 17px "Unbounded", sans-serif; }
+  .calc .out span { font-size: 12px; color: var(--muted); }
+  .calc .roi b { color: var(--ok); }
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; }
+  footer a { color: inherit; }
+  .api-note { font-size: 11.5px; color: var(--muted); }
+  @media (max-width: 1000px) {
+    .status { grid-template-columns: 1fr 1fr; }
+    .headline { grid-column: 1 / -1; }
+    .grid, .lower { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .calc form { grid-template-columns: 1fr 1fr; }
+    .calc form button { grid-column: 1 / -1; }
+    .types .row { grid-template-columns: 96px 1fr 78px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="42" height="42" viewBox="0 0 42 42" aria-hidden="true">
+        <circle cx="21" cy="21" r="9" fill="#f2b33d"/>
+        <g stroke="#f2b33d" stroke-width="3" stroke-linecap="round">
+          <line x1="21" y1="3" x2="21" y2="8"/><line x1="21" y1="34" x2="21" y2="39"/>
+          <line x1="3" y1="21" x2="8" y2="21"/><line x1="34" y1="21" x2="39" y2="21"/>
+          <line x1="8.3" y1="8.3" x2="11.8" y2="11.8"/><line x1="30.2" y1="30.2" x2="33.7" y2="33.7"/>
+          <line x1="8.3" y1="33.7" x2="11.8" y2="30.2"/><line x1="30.2" y1="11.8" x2="33.7" y2="8.3"/>
+        </g>
+      </svg>
+      <div>
+        <h1>Kün</h1>
+        <p id="plantName">ИИ-инспектор солнечных станций</p>
+      </div>
+    </div>
+    <div class="seg" role="tablist" aria-label="Облёт">
+      <button data-flight="1" class="on">Облёт 1 · до ремонта</button>
+      <button data-flight="2">Облёт 2 · после</button>
+    </div>
+    <a class="btn" id="woBtn" href="api/workorder?flight=1" target="_blank" rel="noopener">Наряд бригаде</a>
+  </header>
+
+  <section class="status">
+    <div class="card headline"><h2 id="headline">Загружаю облёт…</h2><p id="subline"></p></div>
+    <div class="card kpi"><div class="v" id="kPanels">—</div><div class="l">панелей проверил дрон</div></div>
+    <div class="card kpi"><div class="v" id="kDefects">—</div><div class="l">дефектов найдено</div></div>
+    <div class="card kpi"><div class="v" id="kLoss">—</div><div class="l">мощности теряется</div></div>
+    <div class="card kpi money" id="kMoneyCard"><div class="v" id="kMonth">—</div><div class="l">₸ теряет станция в месяц</div></div>
+  </section>
+
+  <section class="grid">
+    <div class="leftcol">
+    <div class="card map-card">
+      <div class="map-head"><b id="mapTitle">Карта станции</b><span id="mapSub">Тепловизор · 10 блоков по 5 МВт</span></div>
+      <svg id="map" viewBox="0 0 1000 636" role="img" aria-label="Схема солнечной станции с найденными дефектами"></svg>
+      <div class="scan" id="scan"></div>
+      <div class="legend">
+        <span><i style="background:var(--panel)"></i>Панели в норме</span>
+        <span><i style="background:var(--alarm)"></i>Отключены</span>
+        <span><i style="background:var(--warn);border-radius:50%"></i>Горячая точка, диод, цепочка</span>
+        <span><i style="background:var(--dust);opacity:.7"></i>Пыль</span>
+        <span><i style="background:var(--grass);border-radius:50%"></i>Трава</span>
+      </div>
+    </div>
+    <div class="card types">
+      <h3>Куда уходят деньги</h3>
+      <div id="types"></div>
+      <p class="api-note" id="srcNote"></p>
+    </div>
+    </div>
+
+    <div class="side">
+      <div class="card detail" id="detail"><h3>Дефект</h3><p class="sub">Нажмите на точку на карте.</p></div>
+      <div class="card list">
+        <h3>Что чинить первым</h3>
+        <ol id="top"></ol>
+        <div class="more" id="more"></div>
+      </div>
+
+      <div class="card calc">
+      <h3>Сколько теряет ваша станция</h3>
+      <form id="calcForm">
+        <label>Мощность, МВт<input id="mw" type="number" min="1" max="5000" step="0.1" value="26.6"></label>
+        <label>Тариф, ₸/кВт·ч<input id="tariff" type="number" min="1" step="0.01" value="34.61"></label>
+        <button class="btn" type="submit">Посчитать</button>
+      </form>
+      <div class="out" id="calcOut"></div>
+      <p class="api-note">26,6 МВт — средняя СЭС Казахстана: 1 222,61 МВт ÷ 46 станций (Kapital.kz, 2025). Потеря 5,08% и 3% у станций с облётами — Raptor Maps, 2026.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Демо-данные, станция условная. Пересчёт в тенге: 1 400 кВт·ч на 1 кВт в год (допущение) × тариф 34,61 ₸/кВт·ч (ПП РК № 645).
+    API: <a href="api/inspection?flight=1" target="_blank" rel="noopener">/api/inspection</a> ·
+    <a href="api/value?mw=26.6" target="_blank" rel="noopener">/api/value</a> ·
+    <a href="api/workorder?flight=1" target="_blank" rel="noopener">/api/workorder</a>
+  </footer>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const fmt = (n) => Math.round(n).toLocaleString("ru-RU");
+const mln = (n) => (n / 1e6).toLocaleString("ru-RU", { maximumFractionDigits: 1 });
+const pct = (n) => String(n).replace(".", ",");
+let state = null, selected = null, flight = "1", local = null;
+
+// Бэкенд: /api/*. Если сайт открыт как статика (GitHub Pages), считаем тем же движком в браузере.
+async function engine() { return local ??= await import("./engine.js"); }
+async function getInspection(f) {
+  try {
+    const r = await fetch(`api/inspection?flight=${f}`, { cache: "no-store" });
+    if (!r.ok) throw 0;
+    $("srcNote").textContent = "Данные: бэкенд /api/inspection";
+    return await r.json();
+  } catch {
+    $("srcNote").textContent = "Данные: расчёт в браузере (статическая версия)";
+    return (await engine()).computeInspection(f);
+  }
+}
+async function getValue(mw, tariff) {
+  try {
+    const r = await fetch(`api/value?mw=${mw}&tariff=${tariff}`, { cache: "no-store" });
+    if (!r.ok) throw 0;
+    return await r.json();
+  } catch {
+    return (await engine()).valueFor(mw, tariff);
+  }
+}
+
+function el(tag, attrs = {}, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+const SEV = { combiner: "alarm", inverter: "alarm", string: "warn", hotspot: "warn", diode: "warn", soiling: "dust", vegetation: "grass" };
+const COLOR = { alarm: "#d2452f", warn: "#e08a2c", dust: "#a98552", grass: "#6f9a3a" };
+
+function drawMap() {
+  const svg = $("map");
+  svg.innerHTML = "";
+  const { plant, defects } = state;
+  // Дорога и подстанция
+  el("rect", { x: 0, y: 612, width: 1000, height: 24, fill: "#d8ccb0" }, svg);
+  el("text", { x: 14, y: 628, "font-size": 12, fill: "#7b6a4c", "font-family": "Onest, system-ui, sans-serif" }, svg).textContent = "Грунтовая дорога — источник пыли";
+  el("rect", { x: 900, y: 600, width: 80, height: 32, rx: 4, fill: "#13202b" }, svg);
+  el("text", { x: 940, y: 621, "text-anchor": "middle", "font-size": 12, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 600 }, svg).textContent = "ПС 110 кВ";
+
+  const offRows = new Set(defects.filter((d) => d.type === "combiner").map((d) => `${d.block}|${d.row}`));
+  const soil = defects.filter((d) => d.type === "soiling");
+
+  plant.blocks.forEach((b) => {
+    el("rect", { x: b.x - 4, y: b.y - 4, width: b.w + 8, height: b.h + 8, rx: 8, fill: "#e1d7c1" }, svg);
+    el("text", { x: b.x + 4, y: b.y + 17, "font-size": 13, "font-weight": 700, fill: "#13202b", "font-family": "Onest, system-ui, sans-serif" }, svg).textContent = b.id;
+    b.tables.forEach((t, i) => {
+      const row = Math.floor(i / b.cols) + 1;
+      const off = offRows.has(`${b.id}|${row}`);
+      el("rect", { x: t.x, y: t.y, width: t.w, height: t.h, rx: 1.5, fill: off ? "#d2452f" : (row % 2 ? "#23466a" : "#2a537b") }, svg);
+    });
+    // Инверторная станция
+    const inv = defects.find((d) => d.type === "inverter" && d.block === b.id);
+    el("rect", { x: b.x + b.w - 34, y: b.y + 4, width: 30, height: 16, rx: 3, fill: inv ? "#d2452f" : "#13202b" }, svg);
+    el("text", { x: b.x + b.w - 19, y: b.y + 15.5, "text-anchor": "middle", "font-size": 9, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 700 }, svg).textContent = "ИНВ";
+  });
+  soil.forEach((d) => {
+    const b = plant.blocks.find((x) => x.id === d.block);
+    const rowsFrom = Number(d.place.match(/ряды (\d+)/)[1]);
+    const t0 = b.tables[(rowsFrom - 1) * b.cols];
+    el("rect", { x: b.x, y: t0.y - 3, width: b.w, height: b.y + b.h - t0.y - 2, rx: 6, fill: "#a98552", opacity: 0.55 }, svg);
+  });
+
+  // Маршрут дрона
+  const path = plant.blocks.slice(0, 5).map((b) => `${b.x + b.w / 2},${b.y + 24}`).concat(plant.blocks.slice(5).reverse().map((b) => `${b.x + b.w / 2},${b.y + b.h - 10}`));
+  el("polyline", { points: path.join(" "), fill: "none", stroke: "#f2b33d", "stroke-width": 2, "stroke-dasharray": "6 6", opacity: 0.9 }, svg);
+
+  // Точки дефектов: сначала мелкие, сверху крупные
+  [...defects].reverse().forEach((d) => {
+    const sev = SEV[d.type];
+    const big = d.lossKw > 100;
+    const x = d.type === "inverter" ? plant.blocks.find((b) => b.id === d.block).x + plant.blocks.find((b) => b.id === d.block).w - 19 : d.x;
+    const y = d.type === "inverter" ? plant.blocks.find((b) => b.id === d.block).y + 12 : d.y;
+    const g = el("g", { class: "dot", tabindex: 0, role: "button", "aria-label": `${d.typeName}, ${d.place}` }, svg);
+    g.style.cursor = "pointer";
+    if (big) {
+      const ring = el("circle", { cx: x, cy: y, r: 16, fill: "none", stroke: COLOR[sev], "stroke-width": 2.5 }, g);
+      el("animate", { attributeName: "r", values: "12;22;12", dur: "1.8s", repeatCount: "indefinite" }, ring);
+      el("animate", { attributeName: "opacity", values: "1;0.2;1", dur: "1.8s", repeatCount: "indefinite" }, ring);
+    }
+    el("circle", { cx: x, cy: y, r: big ? 8 : 5, fill: COLOR[sev], stroke: "#fff", "stroke-width": 1.5 }, g);
+    if (selected && selected.id === d.id) el("circle", { cx: x, cy: y, r: big ? 13 : 10, fill: "none", stroke: "#13202b", "stroke-width": 2.5 }, g);
+    g.addEventListener("click", () => select(d));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter") select(d); });
+  });
+}
+
+// Тепловой снимок стола: 2 ряда × 21 панель
+function drawThermo(d) {
+  const c = $("thermo");
+  const W = (c.width = c.clientWidth * 2), H = (c.height = 220);
+  const ctx = c.getContext("2d");
+  const cols = 21, rows = 2, pad = 8, gw = (W - pad * 2) / cols, gh = (H - pad * 2) / rows;
+  const stops = [[0, [11, 2, 33]], [0.25, [75, 15, 110]], [0.5, [176, 35, 78]], [0.7, [239, 106, 30]], [0.88, [251, 211, 74]], [1, [255, 251, 230]]];
+  const iron = (v) => {
+    v = Math.max(0, Math.min(1, v));
+    for (let i = 1; i < stops.length; i++) if (v <= stops[i][0]) {
+      const [a, ca] = stops[i - 1], [b, cb] = stops[i], t = (v - a) / (b - a);
+      return `rgb(${ca.map((x, k) => Math.round(x + (cb[k] - x) * t)).join(",")})`;
+    }
+    return "rgb(255,251,230)";
+  };
+  let seed = d.id.charCodeAt(2) * 31 + Number(d.id.slice(2));
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  ctx.fillStyle = "#0b0221"; ctx.fillRect(0, 0, W, H);
+  const hotCol = Math.floor(rnd() * cols), hotRow = Math.floor(rnd() * rows);
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+    let v = 0.42 + rnd() * 0.06;
+    if (d.type === "combiner") v = 0.72 + rnd() * 0.05;
+    if (d.type === "string" && k < 14) v = 0.66 + rnd() * 0.05;
+    if (d.type === "soiling") v = 0.5 + rnd() * 0.08;
+    const x = pad + k * gw, y = pad + r * gh;
+    ctx.fillStyle = iron(v); ctx.fillRect(x + 2, y + 2, gw - 4, gh - 4);
+    if (d.type === "diode" && r === hotRow && k === hotCol) { ctx.fillStyle = iron(0.8); ctx.fillRect(x + 2, y + 2, gw - 4, (gh - 4) / 3); }
+    if (d.type === "hotspot" && r === hotRow && k === hotCol) {
+      const g = ctx.createRadialGradient(x + gw / 2, y + gh / 2, 1, x + gw / 2, y + gh / 2, gw * 0.6);
+      g.addColorStop(0, iron(1)); g.addColorStop(0.5, iron(0.85)); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(x, y, gw, gh);
+    }
+  }
+  if (d.type === "inverter" || d.type === "vegetation") {
+    ctx.fillStyle = "rgba(11,2,33,.6)"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#fff"; ctx.font = "600 26px Onest, system-ui, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(d.type === "inverter" ? "Инвертор: перегрев корпуса +14 °C" : "Тень от травы на нижнем ряду", W / 2, H / 2 + 8);
+  }
+}
+
+function select(d) {
+  selected = d;
+  const box = $("detail");
+  const small = d.lossKw < 100;
+  box.innerHTML = `
+    <h3>Дефект ${d.id} <span class="tag ${small ? "small" : ""}">${d.short}</span></h3>
+    <div class="big">−${fmt(d.kztDay)} ₸ в день</div>
+    <div class="sub">${d.typeName}. Потеря ${pct(d.lossKw)} кВт, ≈ ${mln(d.kztDay * 30)} млн ₸ в месяц.</div>
+    <dl>
+      <dt>Где</dt><dd>${d.place}</dd>
+      ${d.tempDelta ? `<dt>Перегрев</dt><dd>+${d.tempDelta} °C к соседним панелям</dd>` : ""}
+      <dt>Что сделать</dt><dd>${d.action}</dd>
+      <dt>Кто и сколько</dt><dd>${d.crew}, ≈ ${pct(d.hours)} ч</dd>
+    </dl>
+    <div class="thermal"><canvas id="thermo"></canvas><div class="scale"></div></div>
+    <div class="thermal-cap">Снимок тепловизора: стол из 42 панелей, чем светлее, тем горячее.</div>`;
+  drawThermo(d);
+  document.querySelectorAll(".list li").forEach((li) => li.classList.toggle("sel", li.dataset.id === d.id));
+  drawMap();
+}
+
+function render() {
+  const { summary: s, plant, defects, flight: f } = state;
+  $("plantName").textContent = `${plant.name} · 50 МВт · ${plant.region}`;
+  const after = f.id === "2";
+  $("headline").textContent = after
+    ? `После ремонта станция теряет ${fmt(s.lossKw)} кВт, а не 2 258`
+    : `Станция теряет ${fmt(s.lossKw)} кВт — ${fmt(s.kztDay)} ₸ каждый день`;
+  $("subline").textContent = after
+    ? `Осталось ${s.defects} мелких дефектов: панели ждут замены по гарантии. ${f.date}.`
+    : `${f.date}. Три самых дорогих дефекта дают ${s.top3SharePct}% потерь, их бригада закроет за один день.`;
+  $("kPanels").textContent = fmt(s.panels);
+  $("kDefects").textContent = s.defects;
+  $("kLoss").textContent = `${pct(s.lossPct)}%`;
+  $("kMonth").textContent = `${mln(s.kztMonth)} млн`;
+  $("kMoneyCard").classList.toggle("money", !after);
+  $("kMoneyCard").classList.toggle("good", after);
+  $("mapTitle").textContent = f.title;
+  $("woBtn").href = `api/workorder?flight=${f.id}`;
+
+  const max = defects[0]?.kztDay || 1;
+  $("top").innerHTML = defects.slice(0, 5).map((d, i) => `
+    <li data-id="${d.id}">
+      <span class="n">${i + 1}</span>
+      <span><span class="t">${d.typeName}</span><br><span class="p">${d.place}</span>
+        <div class="bar"><span style="width:${Math.max(3, (d.kztDay / max) * 100)}%"></span></div></span>
+      <span class="m">${fmt(d.kztDay)} ₸<br><span class="p">в день</span></span>
+    </li>`).join("");
+  $("top").querySelectorAll("li").forEach((li) => li.addEventListener("click", () => select(defects.find((d) => d.id === li.dataset.id))));
+  $("more").textContent = defects.length > 5 ? `И ещё ${defects.length - 5} мелких дефектов — все в наряде для бригады.` : "Все дефекты показаны.";
+
+  const tmax = s.byType[0]?.lossKw || 1;
+  $("types").innerHTML = s.byType.map((t) => `
+    <div class="row"><span>${t.name} · ${t.count}</span><div class="track"><span style="width:${Math.max(2, (t.lossKw / tmax) * 100)}%"></span></div><b>${fmt(t.lossKw * state.econ.yieldKwhPerKwYear / 365 * state.econ.tariffKztPerKwh)} ₸/д</b></div>`).join("");
+
+  selected = defects[0] || null;
+  if (selected) select(selected); else drawMap();
+}
+
+async function load(f) {
+  flight = f;
+  document.querySelectorAll(".seg button").forEach((b) => b.classList.toggle("on", b.dataset.flight === f));
+  const scan = $("scan"); scan.classList.remove("run"); void scan.offsetWidth; scan.classList.add("run");
+  state = await getInspection(f);
+  render();
+}
+
+async function calc(e) {
+  e?.preventDefault();
+  const mw = Number($("mw").value), tariff = Number($("tariff").value);
+  if (!(mw > 0) || !(tariff > 0)) return;
+  const v = await getValue(mw, tariff);
+  $("calcOut").innerHTML = `
+    <div><b>${mln(v.lossKztYear)} млн ₸</b><span>теряет в год сейчас (${pct(v.lossPct)}%)</span></div>
+    <div><b>${mln(v.recoverableKztYear)} млн ₸</b><span>вернёт Kün в год (до 3%)</span></div>
+    <div><b>${mln(v.priceKztYear)} млн ₸</b><span>подписка Kün в год</span></div>
+    <div class="roi"><b>×${pct(v.roi)}</b><span>возврат на каждый тенге</span></div>`;
+}
+
+document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => load(b.dataset.flight)));
+$("calcForm").addEventListener("submit", calc);
+window.addEventListener("resize", () => selected && drawThermo(selected));
+load("1");
+calc();
+</script>
+</body>
+</html>
