@@ -1,5 +1,5 @@
 // GET /api/inspection?flight=1|2
-// Результат облёта станции: дефекты на карте, потеря мощности и денег, приоритеты ремонта.
+// Result of a drone flight: defects on the map, power and money lost, what to fix first.
 import { computeInspection } from "../public/engine.js";
 
 export default function handler(req, res) {

@@ -1,5 +1,5 @@
 // GET /api/workorder?flight=1|2
-// Наряд-задание для бригады: что чинить, где, в каком порядке.
+// Work order for the repair crew: what to fix, where, and in what order.
 import { buildWorkOrder } from "../public/engine.js";
 
 export default function handler(req, res) {

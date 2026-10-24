@@ -1,5 +1,5 @@
-// Локальный сервер без зависимостей: node server.js → http://localhost:3000
-// На Vercel этот файл не нужен: там папка api/ работает как серверные функции.
+// Local server with no dependencies: node server.js → http://localhost:3000
+// Not needed on Vercel: there the api/ folder runs as serverless functions.
 import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
@@ -13,7 +13,7 @@ const root = fileURLToPath(new URL("./public/", import.meta.url));
 const routes = { "/api/inspection": inspection, "/api/value": value, "/api/workorder": workorder };
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png" };
 
-// Добавляем к ответу методы status/json/send, как в серверных функциях Vercel
+// Add status/json/send to the response, like Vercel serverless functions
 function wrap(res) {
   res.status = (code) => ((res.statusCode = code), res);
   res.json = (obj) => {
@@ -39,7 +39,7 @@ http
       res.end(body);
     } catch {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("Не найдено");
+      res.end("Not found");
     }
   })
   .listen(process.env.PORT || 3000, () => console.log(`Kün: http://localhost:${process.env.PORT || 3000}`));

@@ -1,39 +1,39 @@
-// Kün — логика платформы. Один файл для сервера (api/*.js) и браузера (запасной режим).
-// Схема станции и облёты — демо-данные. Экономика — с источниками или пометкой «допущение».
+// Kün platform logic. One file for the server (api/*.js) and the browser (static fallback).
+// The plant layout and flights are demo data. Economics have sources or are marked as assumptions.
 
 export const ECON = {
-  // Фиксированный тариф для солнечных станций: 34,61 ₸/кВт·ч без НДС (ПП РК № 645 от 12.06.2014)
+  // Fixed tariff for solar plants: 34.61 KZT/kWh excl. VAT (Government Decree of Kazakhstan No. 645, 12.06.2014)
   tariffKztPerKwh: 34.61,
-  // Годовая выработка 1 кВт панелей на юге Казахстана: допущение
+  // Yearly output of 1 kW of panels in southern Kazakhstan: assumption
   yieldKwhPerKwYear: 1400,
-  // Средняя потеря мощности из-за дефектов: 5,08% (Raptor Maps, Global Solar Report 2026, 373 ГВт)
+  // Average power lost to defects: 5.08% (Raptor Maps, Global Solar Report 2026, 373 GW)
   avgLossPct: 5.08,
-  // На станциях с регулярными облётами дронов потеря около 3% (там же)
+  // Plants with regular drone flights lose about 3% (same source)
   droneLossPct: 3.0,
-  // Цена Kün: 300 000 ₸ за 1 МВт в год — наше предположение
+  // Kün price: 300,000 KZT per MW per year — our assumption
   priceKztPerMwYear: 300000,
 };
 
 const DAY_KWH_PER_KW = ECON.yieldKwhPerKwYear / 365;
-const KZT_PER_KW_DAY = DAY_KWH_PER_KW * ECON.tariffKztPerKwh; // ≈ 132,8 ₸ в сутки за 1 кВт
+const KZT_PER_KW_DAY = DAY_KWH_PER_KW * ECON.tariffKztPerKwh; // ≈ 132.8 KZT per day for 1 kW
 
 export const PLANT = {
   id: "demo-kun",
-  name: "СЭС «Демо-Күн»",
-  region: "Жамбылская область (условно)",
+  name: "Demo Kün Solar Plant",
+  region: "Zhambyl Region (demo)",
   capacityKw: 50000,
   panels: 90720,
-  blocks: [], // заполняется ниже
+  blocks: [], // filled in below
 };
 
-// 10 блоков по 5 МВт: 2 ряда × 5. В каждом блоке 12 рядов × 6 столов. Стол ≈ 69,4 кВт (126 панелей).
+// 10 blocks of 5 MW: 2 rows × 5. Each block has 12 rows × 6 tables. One table ≈ 69.4 kW (126 panels).
 const BLOCK_W = 180, BLOCK_H = 262, GAP_X = 12, GAP_Y = 34, X0 = 26, Y0 = 44;
 const ROWS = 12, COLS = 6, TABLE_KW = PLANT.capacityKw / (10 * ROWS * COLS);
 for (let i = 0; i < 10; i++) {
   const r = Math.floor(i / 5), c = i % 5;
   PLANT.blocks.push({
-    id: `Б-${i + 1}`,
-    inverter: `ИНВ-${i + 1}`,
+    id: `B-${i + 1}`,
+    inverter: `INV-${i + 1}`,
     x: X0 + c * (BLOCK_W + GAP_X),
     y: Y0 + r * (BLOCK_H + GAP_Y),
     w: BLOCK_W,
@@ -45,16 +45,16 @@ for (let i = 0; i < 10; i++) {
 }
 
 export const DEFECT_TYPES = {
-  combiner: { name: "Отказ комбайнер-бокса", short: "Комбайнер", action: "Заменить предохранители и проверить комбайнер-бокс", crew: "Электрик", hours: 3 },
-  string: { name: "Отключена цепочка панелей", short: "Цепочка", action: "Проверить разъёмы MC4 и предохранитель цепочки", crew: "Электрик", hours: 1 },
-  inverter: { name: "Инвертор недодаёт мощность", short: "Инвертор", action: "Сервис инвертора: фильтры, вентиляция, ошибки в журнале", crew: "Сервис производителя", hours: 4 },
-  soiling: { name: "Пыль на панелях", short: "Пыль", action: "Помыть панели в зоне у дороги", crew: "Мойка", hours: 6 },
-  hotspot: { name: "Горячая точка в панели", short: "Горячая точка", action: "Заменить панель по гарантии производителя", crew: "Монтажник", hours: 0.5 },
-  diode: { name: "Пробит байпас-диод", short: "Диод", action: "Заменить панель по гарантии производителя", crew: "Монтажник", hours: 0.5 },
-  vegetation: { name: "Затенение травой", short: "Трава", action: "Скосить траву перед рядом", crew: "Подсобный рабочий", hours: 1 },
+  combiner: { name: "Broken junction box", short: "Junction box", action: "Replace the fuses and check the junction box", crew: "Electrician", hours: 3 },
+  string: { name: "Chain of panels switched off", short: "Panel chain", action: "Check the plugs and the fuse of this panel chain", crew: "Electrician", hours: 1 },
+  inverter: { name: "Inverter losing power", short: "Inverter", action: "Service the inverter: clean filters and fans, read the error log", crew: "Manufacturer service", hours: 4 },
+  soiling: { name: "Dust on panels", short: "Dust", action: "Wash the panels near the dirt road", crew: "Cleaning team", hours: 6 },
+  hotspot: { name: "Hot spot in a panel", short: "Hot spot", action: "Replace the panel under the maker's warranty", crew: "Installer", hours: 0.5 },
+  diode: { name: "Burnt diode in a panel", short: "Diode", action: "Replace the panel under the maker's warranty", crew: "Installer", hours: 0.5 },
+  vegetation: { name: "Grass shading panels", short: "Grass", action: "Cut the grass in front of the row", crew: "Groundskeeper", hours: 1 },
 };
 
-// Детерминированный генератор: одинаковые данные на любом сервере и в браузере
+// Seeded generator: the same data on any server and in the browser
 function rng(seed) {
   let s = seed >>> 0;
   return () => {
@@ -73,10 +73,10 @@ function tablePos(block, row, col) {
 }
 
 function placeOf(type, block, row, col, area) {
-  if (type === "inverter") return `блок ${block.id}, инвертор ${block.inverter}`;
-  if (type === "soiling" && area) return `блок ${block.id}, ряды ${area.rowFrom + 1}–${area.rowTo + 1}`;
-  if (type === "combiner") return `блок ${block.id}, ряд ${row + 1} целиком`;
-  return `блок ${block.id}, ряд ${row + 1}, стол ${col + 1}`;
+  if (type === "inverter") return `block ${block.id}, inverter ${block.inverter}`;
+  if (type === "soiling" && area) return `block ${block.id}, rows ${area.rowFrom + 1}–${area.rowTo + 1}`;
+  if (type === "combiner") return `block ${block.id}, whole row ${row + 1}`;
+  return `block ${block.id}, row ${row + 1}, table ${col + 1}`;
 }
 
 function buildDefects() {
@@ -100,19 +100,19 @@ function buildDefects() {
       fixedOnFlight2: extra.fixed ?? true,
     });
   };
-  // Крупные: то, что съедает больше всего денег
+  // Big ones: they eat the most money
   add("combiner", 2, 4, 0, TABLE_KW * COLS, { tempDelta: 18, area: { block: 2, rowFrom: 4, rowTo: 4 } });
   add("combiner", 5, 9, 0, TABLE_KW * COLS, { tempDelta: 16, area: { block: 5, rowFrom: 9, rowTo: 9 } });
   add("inverter", 6, 11, 5, 5000 * 0.12, { tempDelta: null });
   add("soiling", 8, 9, 2, 5000 * 0.07, { area: { block: 8, rowFrom: 8, rowTo: 11 } });
   add("soiling", 9, 10, 3, 5000 * 0.05, { area: { block: 9, rowFrom: 9, rowTo: 11 } });
-  // Цепочки
+  // Panel chains
   for (let i = 0; i < 13; i++) {
     add("string", Math.floor(rand() * 10), Math.floor(rand() * ROWS), Math.floor(rand() * COLS), 15.4, { tempDelta: Math.round(8 + rand() * 6), fixed: i !== 12 });
   }
-  // Трава
+  // Grass
   for (let i = 0; i < 5; i++) add("vegetation", 5 + Math.floor(rand() * 5), ROWS - 1, Math.floor(rand() * COLS), 2 + rand() * 3, { fixed: true });
-  // Мелкие дефекты панелей
+  // Small panel defects
   for (let i = 0; i < 26; i++) {
     add("hotspot", Math.floor(rand() * 10), Math.floor(rand() * ROWS), Math.floor(rand() * COLS), 0.12 + rand() * 0.2, { tempDelta: Math.round(20 + rand() * 25), fixed: i < 18 });
   }
@@ -129,8 +129,8 @@ export function kztPerDay(lossKw) {
 }
 
 export const FLIGHTS = {
-  "1": { id: "1", date: "14 октября 2026", title: "Облёт 1: до ремонта" },
-  "2": { id: "2", date: "21 октября 2026", title: "Облёт 2: после ремонта" },
+  "1": { id: "1", date: "14 October 2026", title: "Flight 1: before repairs" },
+  "2": { id: "2", date: "21 October 2026", title: "Flight 2: after repairs" },
 };
 
 export function computeInspection(flight = "1") {
@@ -182,7 +182,7 @@ function tablesOf(block) {
   return out;
 }
 
-// Окупаемость Kün для любой станции: что теряет, что вернёт, сколько стоит
+// Kün payback for any plant: what it loses, what Kün brings back, what it costs
 export function valueFor(mw, tariff = ECON.tariffKztPerKwh, lossPct = ECON.avgLossPct) {
   const revenue = mw * 1000 * ECON.yieldKwhPerKwYear * tariff;
   const lossNow = revenue * (lossPct / 100);
@@ -202,21 +202,21 @@ export function valueFor(mw, tariff = ECON.tariffKztPerKwh, lossPct = ECON.avgLo
 
 export function buildWorkOrder(flight = "1") {
   const st = computeInspection(flight);
-  const fmt = (n) => Math.round(n).toLocaleString("ru-RU");
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
   const lines = [
-    `НАРЯД-ЗАДАНИЕ — ${st.plant.name}, ${st.plant.region}`,
+    `WORK ORDER — ${st.plant.name}, ${st.plant.region}`,
     `${st.flight.title}, ${st.flight.date}`,
-    `Проверено панелей: ${fmt(st.summary.panels)}. Дефектов: ${st.summary.defects}.`,
-    `Станция теряет ${fmt(st.summary.lossKw)} кВт (${String(st.summary.lossPct).replace(".", ",")}%), это ≈ ${fmt(st.summary.kztDay)} ₸ в день.`,
+    `Panels checked: ${fmt(st.summary.panels)}. Defects found: ${st.summary.defects}.`,
+    `The plant is losing ${fmt(st.summary.lossKw)} kW (${st.summary.lossPct}%), about ${fmt(st.summary.kztDay)} KZT every day.`,
     "",
-    "Порядок работ: сначала то, что дороже всего стоит каждый день.",
+    "Fix in this order: the most expensive problems first.",
     "",
   ];
   st.defects.forEach((d, i) => {
     lines.push(`${String(i + 1).padStart(2, " ")}. [${d.id}] ${d.typeName} — ${d.place}`);
-    lines.push(`    Потеря: ${String(d.lossKw).replace(".", ",")} кВт ≈ ${fmt(d.kztDay)} ₸/день. Кто: ${d.crew}, ≈ ${d.hours} ч.`);
-    lines.push(`    Что сделать: ${d.action}`);
+    lines.push(`    Loss: ${d.lossKw} kW ≈ ${fmt(d.kztDay)} KZT/day. Who: ${d.crew}, about ${d.hours} h.`);
+    lines.push(`    What to do: ${d.action}`);
   });
-  lines.push("", "Демо-данные. Пересчёт в тенге: 1 400 кВт·ч на 1 кВт в год (допущение) × 34,61 ₸/кВт·ч (ПП РК № 645).");
+  lines.push("", "Demo data. Money: 1,400 kWh per kW per year (assumption) × 34.61 KZT/kWh (Government Decree No. 645).");
   return lines.join("\n");
 }

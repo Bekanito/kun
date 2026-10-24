@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kün — ИИ-инспектор солнечных станций</title>
-<meta name="description" content="Kün находит сломанные и запылённые панели на солнечных станциях Казахстана с дрона-тепловизора и считает потери в тенге.">
+<title>Kün — AI inspector for solar plants</title>
+<meta name="description" content="Kün finds broken and dusty panels on solar plants in Kazakhstan with a thermal drone and shows how much money they lose.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -83,7 +83,7 @@
   .bar > span { display: block; height: 100%; border-radius: 3px; background: var(--alarm); }
   .more { font-size: 12.5px; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
   .lower { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .types .row { display: grid; grid-template-columns: 150px 1fr 100px; gap: 10px; align-items: center; font-size: 13.5px; padding: 5px 0; }
+  .types .row { display: grid; grid-template-columns: 150px 1fr 110px; gap: 10px; align-items: center; font-size: 13.5px; padding: 5px 0; }
   .types .track { height: 10px; background: #eadfca; border-radius: 5px; overflow: hidden; }
   .types .track span { display: block; height: 100%; background: var(--panel-2); border-radius: 5px; }
   .types .row b { text-align: right; }
@@ -125,68 +125,68 @@
       </svg>
       <div>
         <h1>Kün</h1>
-        <p id="plantName">ИИ-инспектор солнечных станций</p>
+        <p id="plantName">AI inspector for solar plants</p>
       </div>
     </div>
-    <div class="seg" role="tablist" aria-label="Облёт">
-      <button data-flight="1" class="on">Облёт 1 · до ремонта</button>
-      <button data-flight="2">Облёт 2 · после</button>
+    <div class="seg" role="tablist" aria-label="Drone flight">
+      <button data-flight="1" class="on">Flight 1 · before repairs</button>
+      <button data-flight="2">Flight 2 · after</button>
     </div>
-    <a class="btn" id="woBtn" href="api/workorder?flight=1" target="_blank" rel="noopener">Наряд бригаде</a>
+    <a class="btn" id="woBtn" href="api/workorder?flight=1" target="_blank" rel="noopener">Work order for the crew</a>
   </header>
 
   <section class="status">
-    <div class="card headline"><h2 id="headline">Загружаю облёт…</h2><p id="subline"></p></div>
-    <div class="card kpi"><div class="v" id="kPanels">—</div><div class="l">панелей проверил дрон</div></div>
-    <div class="card kpi"><div class="v" id="kDefects">—</div><div class="l">дефектов найдено</div></div>
-    <div class="card kpi"><div class="v" id="kLoss">—</div><div class="l">мощности теряется</div></div>
-    <div class="card kpi money" id="kMoneyCard"><div class="v" id="kMonth">—</div><div class="l">₸ теряет станция в месяц</div></div>
+    <div class="card headline"><h2 id="headline">Loading the drone flight…</h2><p id="subline"></p></div>
+    <div class="card kpi"><div class="v" id="kPanels">—</div><div class="l">panels checked by the drone</div></div>
+    <div class="card kpi"><div class="v" id="kDefects">—</div><div class="l">problems found</div></div>
+    <div class="card kpi"><div class="v" id="kLoss">—</div><div class="l">of power is lost</div></div>
+    <div class="card kpi money" id="kMoneyCard"><div class="v" id="kMonth">—</div><div class="l">₸ lost every month</div></div>
   </section>
 
   <section class="grid">
     <div class="leftcol">
     <div class="card map-card">
-      <div class="map-head"><b id="mapTitle">Карта станции</b><span id="mapSub">Тепловизор · 10 блоков по 5 МВт</span></div>
-      <svg id="map" viewBox="0 0 1000 636" role="img" aria-label="Схема солнечной станции с найденными дефектами"></svg>
+      <div class="map-head"><b id="mapTitle">Plant map</b><span id="mapSub">Thermal camera · 10 blocks of 5 MW</span></div>
+      <svg id="map" viewBox="0 0 1000 636" role="img" aria-label="Map of the solar plant with the problems found"></svg>
       <div class="scan" id="scan"></div>
       <div class="legend">
-        <span><i style="background:var(--panel)"></i>Панели в норме</span>
-        <span><i style="background:var(--alarm)"></i>Отключены</span>
-        <span><i style="background:var(--warn);border-radius:50%"></i>Горячая точка, диод, цепочка</span>
-        <span><i style="background:var(--dust);opacity:.7"></i>Пыль</span>
-        <span><i style="background:var(--grass);border-radius:50%"></i>Трава</span>
+        <span><i style="background:var(--panel)"></i>Panels OK</span>
+        <span><i style="background:var(--alarm)"></i>Switched off</span>
+        <span><i style="background:var(--warn);border-radius:50%"></i>Hot spot, diode, panel chain</span>
+        <span><i style="background:var(--dust);opacity:.7"></i>Dust</span>
+        <span><i style="background:var(--grass);border-radius:50%"></i>Grass</span>
       </div>
     </div>
     <div class="card types">
-      <h3>Куда уходят деньги</h3>
+      <h3>Where the money goes</h3>
       <div id="types"></div>
       <p class="api-note" id="srcNote"></p>
     </div>
     </div>
 
     <div class="side">
-      <div class="card detail" id="detail"><h3>Дефект</h3><p class="sub">Нажмите на точку на карте.</p></div>
+      <div class="card detail" id="detail"><h3>Problem</h3><p class="sub">Tap a dot on the map.</p></div>
       <div class="card list">
-        <h3>Что чинить первым</h3>
+        <h3>What to fix first</h3>
         <ol id="top"></ol>
         <div class="more" id="more"></div>
       </div>
 
       <div class="card calc">
-      <h3>Сколько теряет ваша станция</h3>
+      <h3>How much does your plant lose?</h3>
       <form id="calcForm">
-        <label>Мощность, МВт<input id="mw" type="number" min="1" max="5000" step="0.1" value="26.6"></label>
-        <label>Тариф, ₸/кВт·ч<input id="tariff" type="number" min="1" step="0.01" value="34.61"></label>
-        <button class="btn" type="submit">Посчитать</button>
+        <label>Plant size, MW<input id="mw" type="number" min="1" max="5000" step="0.1" value="26.6"></label>
+        <label>Price, ₸ per kWh<input id="tariff" type="number" min="1" step="0.01" value="34.61"></label>
+        <button class="btn" type="submit">Calculate</button>
       </form>
       <div class="out" id="calcOut"></div>
-      <p class="api-note">26,6 МВт — средняя СЭС Казахстана: 1 222,61 МВт ÷ 46 станций (Kapital.kz, 2025). Потеря 5,08% и 3% у станций с облётами — Raptor Maps, 2026.</p>
+      <p class="api-note">26.6 MW is the average solar plant in Kazakhstan: 1,222.61 MW ÷ 46 plants (Kapital.kz, 2025). 5.08% average loss and about 3% with drone flights: Raptor Maps, 2026.</p>
       </div>
     </div>
   </section>
 
   <footer>
-    Демо-данные, станция условная. Пересчёт в тенге: 1 400 кВт·ч на 1 кВт в год (допущение) × тариф 34,61 ₸/кВт·ч (ПП РК № 645).
+    Demo data, the plant is made up. Money: 1,400 kWh per kW per year (assumption) × 34.61 ₸ per kWh (Government Decree No. 645).
     API: <a href="api/inspection?flight=1" target="_blank" rel="noopener">/api/inspection</a> ·
     <a href="api/value?mw=26.6" target="_blank" rel="noopener">/api/value</a> ·
     <a href="api/workorder?flight=1" target="_blank" rel="noopener">/api/workorder</a>
@@ -196,21 +196,21 @@
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
-const fmt = (n) => Math.round(n).toLocaleString("ru-RU");
-const mln = (n) => (n / 1e6).toLocaleString("ru-RU", { maximumFractionDigits: 1 });
-const pct = (n) => String(n).replace(".", ",");
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+const mln = (n) => (n / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 });
+const pct = (n) => String(n);
 let state = null, selected = null, flight = "1", local = null;
 
-// Бэкенд: /api/*. Если сайт открыт как статика (GitHub Pages), считаем тем же движком в браузере.
+// Backend: /api/*. If the site runs as static files (GitHub Pages), the same engine runs in the browser.
 async function engine() { return local ??= await import("./engine.js"); }
 async function getInspection(f) {
   try {
     const r = await fetch(`api/inspection?flight=${f}`, { cache: "no-store" });
     if (!r.ok) throw 0;
-    $("srcNote").textContent = "Данные: бэкенд /api/inspection";
+    $("srcNote").textContent = "Data: backend /api/inspection";
     return await r.json();
   } catch {
-    $("srcNote").textContent = "Данные: расчёт в браузере (статическая версия)";
+    $("srcNote").textContent = "Data: calculated in the browser (static version)";
     return (await engine()).computeInspection(f);
   }
 }
@@ -238,11 +238,11 @@ function drawMap() {
   const svg = $("map");
   svg.innerHTML = "";
   const { plant, defects } = state;
-  // Дорога и подстанция
+  // Road and substation
   el("rect", { x: 0, y: 612, width: 1000, height: 24, fill: "#d8ccb0" }, svg);
-  el("text", { x: 14, y: 628, "font-size": 12, fill: "#7b6a4c", "font-family": "Onest, system-ui, sans-serif" }, svg).textContent = "Грунтовая дорога — источник пыли";
+  el("text", { x: 14, y: 628, "font-size": 12, fill: "#7b6a4c", "font-family": "Onest, system-ui, sans-serif" }, svg).textContent = "Dirt road: where the dust comes from";
   el("rect", { x: 900, y: 600, width: 80, height: 32, rx: 4, fill: "#13202b" }, svg);
-  el("text", { x: 940, y: 621, "text-anchor": "middle", "font-size": 12, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 600 }, svg).textContent = "ПС 110 кВ";
+  el("text", { x: 940, y: 621, "text-anchor": "middle", "font-size": 12, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 600 }, svg).textContent = "Substation";
 
   const offRows = new Set(defects.filter((d) => d.type === "combiner").map((d) => `${d.block}|${d.row}`));
   const soil = defects.filter((d) => d.type === "soiling");
@@ -255,23 +255,23 @@ function drawMap() {
       const off = offRows.has(`${b.id}|${row}`);
       el("rect", { x: t.x, y: t.y, width: t.w, height: t.h, rx: 1.5, fill: off ? "#d2452f" : (row % 2 ? "#23466a" : "#2a537b") }, svg);
     });
-    // Инверторная станция
+    // Inverter
     const inv = defects.find((d) => d.type === "inverter" && d.block === b.id);
     el("rect", { x: b.x + b.w - 34, y: b.y + 4, width: 30, height: 16, rx: 3, fill: inv ? "#d2452f" : "#13202b" }, svg);
-    el("text", { x: b.x + b.w - 19, y: b.y + 15.5, "text-anchor": "middle", "font-size": 9, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 700 }, svg).textContent = "ИНВ";
+    el("text", { x: b.x + b.w - 19, y: b.y + 15.5, "text-anchor": "middle", "font-size": 9, fill: "#fff", "font-family": "Onest, system-ui, sans-serif", "font-weight": 700 }, svg).textContent = "INV";
   });
   soil.forEach((d) => {
     const b = plant.blocks.find((x) => x.id === d.block);
-    const rowsFrom = Number(d.place.match(/ряды (\d+)/)[1]);
+    const rowsFrom = Number(d.place.match(/rows (\d+)/)[1]);
     const t0 = b.tables[(rowsFrom - 1) * b.cols];
     el("rect", { x: b.x, y: t0.y - 3, width: b.w, height: b.y + b.h - t0.y - 2, rx: 6, fill: "#a98552", opacity: 0.55 }, svg);
   });
 
-  // Маршрут дрона
+  // Drone route
   const path = plant.blocks.slice(0, 5).map((b) => `${b.x + b.w / 2},${b.y + 24}`).concat(plant.blocks.slice(5).reverse().map((b) => `${b.x + b.w / 2},${b.y + b.h - 10}`));
   el("polyline", { points: path.join(" "), fill: "none", stroke: "#f2b33d", "stroke-width": 2, "stroke-dasharray": "6 6", opacity: 0.9 }, svg);
 
-  // Точки дефектов: сначала мелкие, сверху крупные
+  // Problem dots: small first, big on top
   [...defects].reverse().forEach((d) => {
     const sev = SEV[d.type];
     const big = d.lossKw > 100;
@@ -291,7 +291,7 @@ function drawMap() {
   });
 }
 
-// Тепловой снимок стола: 2 ряда × 21 панель
+// Thermal photo of one table: 2 rows × 21 panels
 function drawThermo(d) {
   const c = $("thermo");
   const W = (c.width = c.clientWidth * 2), H = (c.height = 220);
@@ -327,7 +327,7 @@ function drawThermo(d) {
   if (d.type === "inverter" || d.type === "vegetation") {
     ctx.fillStyle = "rgba(11,2,33,.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.font = "600 26px Onest, system-ui, sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(d.type === "inverter" ? "Инвертор: перегрев корпуса +14 °C" : "Тень от травы на нижнем ряду", W / 2, H / 2 + 8);
+    ctx.fillText(d.type === "inverter" ? "Inverter box is 14 °C too hot" : "Grass shades the bottom row", W / 2, H / 2 + 8);
   }
 }
 
@@ -336,17 +336,17 @@ function select(d) {
   const box = $("detail");
   const small = d.lossKw < 100;
   box.innerHTML = `
-    <h3>Дефект ${d.id} <span class="tag ${small ? "small" : ""}">${d.short}</span></h3>
-    <div class="big">−${fmt(d.kztDay)} ₸ в день</div>
-    <div class="sub">${d.typeName}. Потеря ${pct(d.lossKw)} кВт, ≈ ${mln(d.kztDay * 30)} млн ₸ в месяц.</div>
+    <h3>Problem ${d.id} <span class="tag ${small ? "small" : ""}">${d.short}</span></h3>
+    <div class="big">−${fmt(d.kztDay)} ₸ a day</div>
+    <div class="sub">${d.typeName}. Loses ${pct(d.lossKw)} kW, about ${mln(d.kztDay * 30)}M ₸ a month.</div>
     <dl>
-      <dt>Где</dt><dd>${d.place}</dd>
-      ${d.tempDelta ? `<dt>Перегрев</dt><dd>+${d.tempDelta} °C к соседним панелям</dd>` : ""}
-      <dt>Что сделать</dt><dd>${d.action}</dd>
-      <dt>Кто и сколько</dt><dd>${d.crew}, ≈ ${pct(d.hours)} ч</dd>
+      <dt>Where</dt><dd>${d.place}</dd>
+      ${d.tempDelta ? `<dt>Too hot</dt><dd>+${d.tempDelta} °C hotter than its neighbours</dd>` : ""}
+      <dt>What to do</dt><dd>${d.action}</dd>
+      <dt>Who and how long</dt><dd>${d.crew}, about ${pct(d.hours)} h</dd>
     </dl>
     <div class="thermal"><canvas id="thermo"></canvas><div class="scale"></div></div>
-    <div class="thermal-cap">Снимок тепловизора: стол из 42 панелей, чем светлее, тем горячее.</div>`;
+    <div class="thermal-cap">Thermal photo of 42 panels: the brighter, the hotter.</div>`;
   drawThermo(d);
   document.querySelectorAll(".list li").forEach((li) => li.classList.toggle("sel", li.dataset.id === d.id));
   drawMap();
@@ -354,18 +354,18 @@ function select(d) {
 
 function render() {
   const { summary: s, plant, defects, flight: f } = state;
-  $("plantName").textContent = `${plant.name} · 50 МВт · ${plant.region}`;
+  $("plantName").textContent = `${plant.name} · 50 MW · ${plant.region}`;
   const after = f.id === "2";
   $("headline").textContent = after
-    ? `После ремонта станция теряет ${fmt(s.lossKw)} кВт, а не 2 258`
-    : `Станция теряет ${fmt(s.lossKw)} кВт — ${fmt(s.kztDay)} ₸ каждый день`;
+    ? `After repairs the plant loses ${fmt(s.lossKw)} kW, not 2,258`
+    : `The plant is losing ${fmt(s.lossKw)} kW: ${fmt(s.kztDay)} ₸ every day`;
   $("subline").textContent = after
-    ? `Осталось ${s.defects} мелких дефектов: панели ждут замены по гарантии. ${f.date}.`
-    : `${f.date}. Три самых дорогих дефекта дают ${s.top3SharePct}% потерь, их бригада закроет за один день.`;
+    ? `${s.defects} small problems left: those panels wait for warranty replacement. ${f.date}.`
+    : `${f.date}. The 3 most expensive problems cause ${s.top3SharePct}% of the loss. The crew can fix them in one day.`;
   $("kPanels").textContent = fmt(s.panels);
   $("kDefects").textContent = s.defects;
   $("kLoss").textContent = `${pct(s.lossPct)}%`;
-  $("kMonth").textContent = `${mln(s.kztMonth)} млн`;
+  $("kMonth").textContent = `${mln(s.kztMonth)}M`;
   $("kMoneyCard").classList.toggle("money", !after);
   $("kMoneyCard").classList.toggle("good", after);
   $("mapTitle").textContent = f.title;
@@ -377,14 +377,14 @@ function render() {
       <span class="n">${i + 1}</span>
       <span><span class="t">${d.typeName}</span><br><span class="p">${d.place}</span>
         <div class="bar"><span style="width:${Math.max(3, (d.kztDay / max) * 100)}%"></span></div></span>
-      <span class="m">${fmt(d.kztDay)} ₸<br><span class="p">в день</span></span>
+      <span class="m">${fmt(d.kztDay)} ₸<br><span class="p">a day</span></span>
     </li>`).join("");
   $("top").querySelectorAll("li").forEach((li) => li.addEventListener("click", () => select(defects.find((d) => d.id === li.dataset.id))));
-  $("more").textContent = defects.length > 5 ? `И ещё ${defects.length - 5} мелких дефектов — все в наряде для бригады.` : "Все дефекты показаны.";
+  $("more").textContent = defects.length > 5 ? `Plus ${defects.length - 5} smaller problems, all in the work order.` : "All problems are shown.";
 
   const tmax = s.byType[0]?.lossKw || 1;
   $("types").innerHTML = s.byType.map((t) => `
-    <div class="row"><span>${t.name} · ${t.count}</span><div class="track"><span style="width:${Math.max(2, (t.lossKw / tmax) * 100)}%"></span></div><b>${fmt(t.lossKw * state.econ.yieldKwhPerKwYear / 365 * state.econ.tariffKztPerKwh)} ₸/д</b></div>`).join("");
+    <div class="row"><span>${t.name} · ${t.count}</span><div class="track"><span style="width:${Math.max(2, (t.lossKw / tmax) * 100)}%"></span></div><b>${fmt(t.lossKw * state.econ.yieldKwhPerKwYear / 365 * state.econ.tariffKztPerKwh)} ₸/day</b></div>`).join("");
 
   selected = defects[0] || null;
   if (selected) select(selected); else drawMap();
@@ -404,10 +404,10 @@ async function calc(e) {
   if (!(mw > 0) || !(tariff > 0)) return;
   const v = await getValue(mw, tariff);
   $("calcOut").innerHTML = `
-    <div><b>${mln(v.lossKztYear)} млн ₸</b><span>теряет в год сейчас (${pct(v.lossPct)}%)</span></div>
-    <div><b>${mln(v.recoverableKztYear)} млн ₸</b><span>вернёт Kün в год (до 3%)</span></div>
-    <div><b>${mln(v.priceKztYear)} млн ₸</b><span>подписка Kün в год</span></div>
-    <div class="roi"><b>×${pct(v.roi)}</b><span>возврат на каждый тенге</span></div>`;
+    <div><b>${mln(v.lossKztYear)}M ₸</b><span>lost per year now (${pct(v.lossPct)}%)</span></div>
+    <div><b>${mln(v.recoverableKztYear)}M ₸</b><span>Kün brings back per year (down to 3%)</span></div>
+    <div><b>${mln(v.priceKztYear)}M ₸</b><span>Kün subscription per year</span></div>
+    <div class="roi"><b>×${pct(v.roi)}</b><span>back for every 1 ₸ paid</span></div>`;
 }
 
 document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => load(b.dataset.flight)));

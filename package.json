@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Kün — ИИ-инспектор солнечных станций: находит дефекты панелей с дрона и считает потери в тенге",
+  "description": "Kün — AI inspector for solar plants: finds panel problems from drone photos and shows the loss in tenge",
   "scripts": { "start": "node server.js" },
   "engines": { "node": ">=18" }
 }
